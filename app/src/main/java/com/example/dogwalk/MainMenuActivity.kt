@@ -47,7 +47,7 @@ class MainMenuActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item?.itemId) {
+        when (item.itemId) {
             R.id.menu_sign_out -> {
                 FirebaseAuth.getInstance().signOut()
                 val intent = Intent(this, MainActivity::class.java)
@@ -71,21 +71,25 @@ class MainMenuActivity : AppCompatActivity() {
 
     private fun saveStoryToDatabase() {
         val current = LocalDateTime.now()
-        val formatter = DateTimeFormatter.BASIC_ISO_DATE
+        val formatter = DateTimeFormatter.ISO_TIME
         val time = current.format(formatter)
-        Log.d("TIME","$time")
+        val formatter2 = DateTimeFormatter.ISO_DATE
+        val date = current.format(formatter2)
+        var fullDate = "$date $time"
+        fullDate = fullDate.replace(Regex("""[$.:]"""),"-")
+        Log.d("TIME",fullDate)
         val ref1 = FirebaseDatabase.getInstance().getReference("/users")
         ref1.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(p0: DataSnapshot) {
                 p0.children.forEach {
                     if (it.key == FirebaseAuth.getInstance().uid){
                         val user = it.getValue(User::class.java)
-                        val story = Story(user!!.name, time)
-                        val ref2 = FirebaseDatabase.getInstance().getReference("/story/$time")
+                        val story = Story(user!!.name, fullDate)
+                        val ref2 = FirebaseDatabase.getInstance().getReference("/story/$fullDate")
 
                         ref2.setValue(story)
                             .addOnSuccessListener {
-                                Toast.makeText(this@MainMenuActivity,"successfully saved story to database $time",Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@MainMenuActivity,"successfully saved story to database $fullDate",Toast.LENGTH_LONG).show()
                             }
                             .addOnFailureListener {
                                 Toast.makeText(this@MainMenuActivity,"save failed",Toast.LENGTH_SHORT).show()
